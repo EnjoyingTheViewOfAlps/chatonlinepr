@@ -1,0 +1,93 @@
+﻿@page "/chat"
+@using ChatOnline.Data
+@inject DataContext DataContext
+@inject UserContext UserContext
+
+
+<h3>@_searchValue</h3>
+
+<div style="width: 100%; height: 90vh;">
+    <div style="display: flex; height: 100%;">
+        @*chat list*@
+        <div style="width: 30%; background: lightgray;">
+            <input type="text" placeholder="Search..." @bind-value="_searchValue"/>
+            <button @onclick="SearchUser">Search</button>
+            @foreach(var u in _users)
+            {
+                @if (u == CurrentUser)
+                {
+                    return;
+                } else {
+                    <p style="cursor: pointer;" @onclick="() => OpenChat(u)">@u.Username</p>
+                }
+            }
+        </div>
+        @*chat component*@
+        <div style="width: 70%;">
+            <div style="display: flex; flex-direction: column; margin: 0 4rem; background: white; border: 1px solid black; height: 100%;">
+                @if (_currentChat != null)
+                {
+                    <div style="margin: 15px; display: flex; flex-direction: column; gap: 10px;">
+                        @foreach(var m in _currentChat.Messages)
+                        {
+                            <div style="display: flex; flex-direction: row; gap: 10px;">
+                                <p>@m.UserOwner.Username</p>
+                                <p>@m.DateTime</p>
+                            </div>
+                            <p>@m.ValueMessage</p>
+                        }
+                    </div>
+                }
+                <div style="display: flex; flex-direction: row; gap: 15px; justify-content: bottom; align-items: center; text-align: center;">
+                    <input type="text" placeholder="Send message..." @bind-value="_messageValue" />
+                    <button @onclick="SendMessage">Send</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+@code {
+    private User CurrentUser;
+    private Chat? _currentChat;
+    private string _searchValue = "";
+    private string _messageValue = "";
+    private List<User> _users = new List<User>();
+
+    private void SearchUser()
+    {
+        var currentLst = DataContext.Users;
+        if(!String.IsNullOrEmpty(_searchValue))
+        {
+            currentLst = DataContext.Users.Where(x => x.Username.Contains(_searchValue)).ToList();
+
+        }
+        _users = currentLst;
+        StateHasChanged();
+    }
+
+    private void OpenChat(User u)
+    {
+        var chat = new Chat();
+        DataContext.Chats.Add(chat);
+        _currentChat = chat;
+    }
+
+    private void SendMessage()
+    {
+        if (_currentChat == null)
+            return;
+
+        if (_messageValue == string.Empty)
+        {
+            return;  
+        }
+        else
+        {
+            _currentChat.Messages.Add(new Message(_messageValue, UserContext.CurrentUser));
+
+            _messageValue = string.Empty;
+        }
+    }
+}

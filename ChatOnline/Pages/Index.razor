@@ -1,0 +1,183 @@
+﻿@page "/"
+@using ChatOnline.Data
+@inject NavigationManager NavManager
+@inject DataContext DataContext
+@inject UserContext UserContext
+
+<PageTitle>chat.online</PageTitle>
+
+<div style="display: flex; flex-direction: row; margin: 15px; gap: 20px;">
+    <button @onclick="OpenModalLogin" class="btn btn-primary">Log in</button>
+
+    <div class="modal" style="@modalStyleLogin">
+
+        <div class="modal-content">
+
+            <span class="close" @onclick="CloseModalLogin">&times;</span>
+
+            <div class="card" style="width: 100vw; margin-top: 1rem;">
+
+                <div class="card-body">
+
+                    <h5 class="card-title">Log in</h5>
+
+                    <div>
+
+                        <div class="form-group">
+
+                            <label for="exampleInputEmail1">Login</label>
+                            <input @bind-value="_user.Username" type="text" class="form-control" id="exampleInputEmail1" aria-describedby="emailHelp" placeholder="Username">
+                            <small id="emailHelp" class="form-text text-muted">Enter your username.</small>
+
+                        </div>
+
+                        <div class="form-group">
+
+                            <label for="exampleInputPassword1">Password</label>
+                            <input @bind-value="_user.Password" type="password" class="form-control" id="exampleInputPassword1" placeholder="Password">
+                            <p style=@warnStyle>Your password must contain: talgat, malishka, hochetsdat or praktiku</p>
+
+                        </div>
+
+                    </div>
+
+                    <div class="d-flex flex-column">
+                        <button @onclick="Login" class="btn btn-primary">Login</button>
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+    <!-- -->
+
+    <div>
+
+        <button @onclick="OpenModalAuth" class="btn btn-primary">Authorize</button>
+
+        <div class="modal" style="@modalStyleAuth">
+
+            <div class="modal-content">
+
+                <span class="close" @onclick="CloseModalAuth">&times;</span>
+
+                <div class="card" style="width: 100vw; margin-top: 1rem;">
+
+                    <div class="card-body">
+
+                        <h5 class="card-title">Auth</h5>
+
+                        <div>
+
+                            <div class="form-group">
+
+                                <label for="exampleInputEmail1">Login</label>
+                                <input @bind-value="_newUser.Username" type="text" class="form-control" id="exampleInputEmail1" aria-describedby="emailHelp" placeholder="Username">
+                                <small id="emailHelp" class="form-text text-muted">Username must be 0-9, A-z.</small>
+
+                            </div>
+
+                            <div class="form-group">
+
+                                <label for="exampleInputPassword1">Password</label>
+                                <input @bind-value="_newUser.Password" type="password" class="form-control" id="exampleInputPassword1" placeholder="Password">
+
+
+                            </div>
+
+                        </div>
+
+                        <div class="d-flex flex-column">
+                            <button @onclick="Go2Chat" class="btn btn-primary">Authorize</button>
+                        </div>
+
+                        <p class="warn" style="@warningStyle">Try logging in again.</p>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+@code {
+    public User _user = new User("", "");
+    public User _newUser = new User("", "");
+
+    string warnStyle = "display: none;";
+
+    private bool showModalLogin = false;
+    private bool showModalAuth = false;
+    private bool warning = false;
+
+    public void Go2Chat()
+    {
+        _newUser = DataContext.Users.FirstOrDefault(x => x.Username == _newUser.Username && x.Password == _newUser.Password);
+
+        if(_newUser != null)
+        {
+            UserContext.CurrentUser = _newUser;
+            NavManager.NavigateTo("/chat");
+            warnStyle = "display: none;";
+        }
+
+    }
+
+    public void showWarning()
+    {
+        warning = true;
+    }
+
+    public void hideWarning()
+    {
+        warning = false;
+    }
+
+    string warningStyle => warning ? "color: red; display: block;" : "color: red; display: none;";
+
+    public void OpenModalLogin()
+    {
+        showModalLogin = true;
+    }
+
+    public void CloseModalLogin()
+    {
+        showModalLogin = false;
+    }
+
+    string modalStyleLogin => showModalLogin ? "display: block;" : "display: none;";
+
+    public void Login()
+    {
+        if (_user.Password.Contains("talgat") || _user.Password.Contains("malishka") || _user.Password.Contains("hochetsdat") || _user.Password.Contains("praktiku") && _user.Password.Contains("$"))
+        {
+            CloseModalLogin();
+            DataContext.Users.Add(_user);
+        }
+        else
+        {
+            warnStyle = "display: block; color: red; font-size: 16px;";
+        }
+    }
+
+    public void OpenModalAuth()
+    {
+        showModalAuth = true;
+    }
+
+    public void CloseModalAuth()
+    {
+        showModalAuth = false;
+    }
+
+    string modalStyleAuth => showModalAuth ? "display: block;" : "display: none;";
+}
